@@ -103,7 +103,11 @@ class robot:
         
     def get_position(self):
         cmd = protocol.GET_COOR
-        self.sendcmd(cmd, True)
+        line = self.sendcmd(cmd, True)
+        x = float(str(line).split(' ')[2][1:])
+        y = float(str(line).split(' ')[3][1:])
+        z = float(str(line).split(' ')[4][1:-5])
+        return [x,y,z]
 
     def async_goto(self,x,y,z, speed):
         self.moving = True
