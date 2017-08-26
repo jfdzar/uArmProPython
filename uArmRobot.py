@@ -28,7 +28,7 @@ class robot:
         self.moving = False
         self.pumping = False
 
-    def connect(self):
+    def connect(self):        
         try:
             if (self.debug): print ("trying to connect to: " + self.serialport)
             self.ser = serial.Serial(self.serialport, 115200, timeout=1)
@@ -38,7 +38,7 @@ class robot:
             while (not Ready):
                 line = self.ser.readline()
                 if (self.debug): print (line)
-                if line.startswith("@5"):
+                if str(line)[2:4] == '@5':
                     Ready = True
                     self.connected = True
                     if (self.debug): print ("Connected!")
@@ -64,12 +64,12 @@ class robot:
             id = self.serid
             self.serid += 1
             cmnd = "#{} {}".format(id,cmnd)
-            cmndString = bytes(cmnd + "\n")
+            cmndString = bytes(cmnd + "\n",'ascii')
             if (self.debug): print ("Serial send: {}".format(cmndString))
             self.ser.write(cmndString)
             if (waitresponse):
                 line = self.ser.readline()
-                while not line.startswith("$" + str(id)):
+                while not str(line)[2:3+len(str(id))] == "$" + str(id):
                     line = self.ser.readline()
                 if (self.debug): print ("Response {}".format(line))
                 if (self.moving):
@@ -89,6 +89,21 @@ class robot:
         s = str(round(speed, 2))
         cmd = protocol.SET_POSITION.format(x,y,z,s)
         self.sendcmd(cmd, True)
+        
+    def laser_goto(self,x,y,z,speed):
+        self.moving = True
+        x = str(round(x, 2))
+        y = str(round(y, 2))
+        z = str(round(z, 2))
+        s = str(round(speed, 2))
+        cmd = protocol.SET_POSITION_LASER.format(x,y,z,s)
+        self.sendcmd(cmd, True)
+        cmd = protocol.SET_POSITION.format(x,y,z,s)
+        self.sendcmd(cmd, True)
+        
+    def get_position(self):
+        cmd = protocol.GET_COOR
+        self.sendcmd(cmd, True)
 
     def async_goto(self,x,y,z, speed):
         self.moving = True
@@ -107,6 +122,13 @@ class robot:
         # 3= Universal holder
         cmd = protocol.SET_MODE.format(modeid)
         self.sendcmd(cmd,True)
+
+    def set_acceleration(self,p,t):
+        self.moving = True
+        p = str(round(p, 0))
+        t = str(round(t, 0))
+        cmd = protocol.SET_ACCELERATION.format(p,t)
+        self.sendcmd(cmd, True)
 
     @staticmethod
     def PointsInCircum(r,n):
