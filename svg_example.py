@@ -1,6 +1,8 @@
 # Example made by OssiLehtinen
+# Modified by jfdzar
+# Change the parameters and add more repetitions to cut deeper
+# Tested with Adobe Ilustrator vector files Objekt -> Pfad -> Kontourlinien
 #
-
 from svgpathtools import svg2paths, wsvg
 import numpy as np
 
@@ -9,24 +11,23 @@ import time
 
 
 #Configure Serial Port
-#serialport = "com3"          # for windows 
-serialport = "/dev/ttyACM0"  # for linux like system
+serialport = "COM7"          # for windows 
 
 # Connect to uArm 
 myRobot = uArmRobot.robot(serialport)
-myRobot.debug = True   # Enable / Disable debug output on screen, by default disabled
+myRobot.debug = False   # Enable / Disable debug output on screen, by default disabled
 myRobot.connect()
 myRobot.mode(1)   # Set mode to Normal
 
 # Read in the svg
-paths, attributes = svg2paths('drawing.svg')
+paths, attributes = svg2paths('svg_drawings\\circle.svg')
 
 scale = .25
-steps_per_seg = 3
+steps_per_seg = 10
 coords = []
 x_offset = 200
-height = 90
-draw_speed = 1000
+height = 150
+draw_speed = 500
 
 # Convert the paths to a list of coordinates
 for i in range(len(paths)):
@@ -44,23 +45,28 @@ for i in range(len(paths)):
 
 
 
-# The starting point
-myRobot.goto(coords[0][0][0], coords[0][0][1], height, 6000)
+for repetition in range(1,2):
+	print('Repetition: ',repetition)
+	# The starting point
+	myRobot.goto(coords[0][0][0], coords[0][0][1], height, 6000)
+	for seg in coords:	
+		myRobot.goto(seg[0][0], seg[0][1], height, 6000)
+		time.sleep(0.15)
+		for p in seg:
+			myRobot.laser_goto(p[0], p[1], height, draw_speed)
+	# Back to the starting point (and turn the laser off)
+	myRobot.goto(coords[0][0][0], coords[0][0][1], height, 6000)
 
 
-for seg in coords:	
-	myRobot.goto(seg[0][0], seg[0][1], height, 6000)
-	time.sleep(0.15)
-	for p in seg:
-		myRobot.goto_laser(p[0], p[1], height, draw_speed)
-	
-
-
-# Back to the starting point (and turn the laser off)
-myRobot.goto(coords[0][0][0], coords[0][0][1], height, 6000)
-
+#Set Normal Mode go to Home Position and disconnect the robot
+myRobot.mode(0)
+myRobot.goto(225, 0, 150, 6000)
+myRobot.goto(130, 0, 90, 6000)
+myRobot.goto(97, 0, 30, 6000)
+print('Disconnecting Robot')
+myRobot.disconnect()
+"""
 I used Inkscape to produce some test-files and everything seemed to work fine. One thing to do, is convert text to paths in Inkscape before saving.
-
 Surely not an issue-free solution, but perhaps a starting point for something more advanced. One noticeable thing is that drawing the line segments is a bit stuttery, not sure how to improve this.
 
 Cheers,
@@ -173,3 +179,4 @@ for seg in coords:
 
 # Back to the starting point (and turn the laser off)
 myRobot.goto(coords[0][0][0], coords[0][0][1], height+move_lift*2, 6000)
+"""
