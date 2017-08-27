@@ -14,3 +14,8 @@ Supports:
 - Drawing a circle
 
 More to follow :-)
+
+Note svg_example.py
+In order to create svg files with paths in Adobe Ilustrator
+Objekt -> Pfad -> Kontourlinien
+With text, select the text and Ctrl+Shift+O
